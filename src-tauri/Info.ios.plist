@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 檔名用英文（中文路徑會讓 iOS 系統函式庫當機），顯示名稱用中文 -->
+	<key>CFBundleDisplayName</key>
+	<string>思維導圖</string>
+</dict>
+</plist>

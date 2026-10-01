@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>思維導圖</title>
+<style>
+:root{
+  --bg:#f6f7fb; --panel:#ffffff; --text:#1f2330; --muted:#6b7280; --line:#e5e7eb;
+  --root:#1f2330; --rootText:#ffffff; --sel:#3b82f6; --term:#2563eb; --termOnRoot:#93c5fd; --shadow:0 4px 20px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14161c; --panel:#1d2029; --text:#e7e9ee; --muted:#9aa0ab; --line:#2b2f3a;
+    --root:#e7e9ee; --rootText:#14161c; --term:#60a5fa; --termOnRoot:#1d4ed8; --shadow:0 4px 20px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif}
+body.is-dragging, body.is-dragging *{cursor:grabbing!important}
+
+#toolbar{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-wrap:wrap;
+  justify-content:center;gap:2px;padding:6px;max-width:calc(100% - 24px);background:var(--panel);
+  border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+#toolbar button{border:0;background:transparent;color:var(--text);padding:6px 10px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+#toolbar button:hover{background:var(--line)}
+#toolbar .sep{width:1px;background:var(--line);margin:4px 3px}
+#zoomLabel{min-width:52px;font-variant-numeric:tabular-nums}
+
+#stage{position:absolute;inset:0;cursor:grab;touch-action:none}
+#stage.panning{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+#edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+#edges path{fill:none;stroke-linecap:round}
+
+.node{position:absolute;transform:translateY(-50%);width:max-content;max-width:280px;padding:8px 16px;line-height:20px;font-size:14px;
+  white-space:pre-wrap;word-break:break-word;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none;
+  background:var(--panel);border:2px solid color-mix(in srgb,var(--c) 70%,transparent)}
+.node.d1{font-size:15px;font-weight:500;background:color-mix(in srgb,var(--c) 14%,var(--panel));border-color:var(--c)}
+.node.root{font-size:18px;font-weight:600;padding:12px 24px;border-radius:14px;background:var(--root);color:var(--rootText);border-color:var(--root)}
+.node.selected{outline:2px solid var(--sel);outline-offset:3px}
+.node.drop{outline:2px dashed var(--sel);outline-offset:3px}
+.node.dragging{pointer-events:none;opacity:.75;z-index:5;box-shadow:var(--shadow)}
+.node .text{outline:none;display:inline-block;min-width:1ch}
+.node .text[contenteditable="true"],.node .text[contenteditable="plaintext-only"]{user-select:text;-webkit-user-select:text;cursor:text}
+
+.toggle{position:absolute;top:50%;transform:translateY(-50%);width:20px;height:20px;padding:0;border:2px solid var(--bg);
+  border-radius:50%;background:var(--c);color:#fff;font-size:11px;font-weight:600;line-height:16px;text-align:center;cursor:pointer;font-family:inherit}
+.toggle.r{right:-12px} .toggle.l{left:-12px}
+.toggle.open{opacity:0;transition:opacity .15s}
+.node:hover .toggle.open{opacity:1}
+.node.selected .toggle{display:none}
+.add,.del{position:absolute;padding:0;border:2px solid var(--bg);border-radius:50%;cursor:pointer}
+.add{top:50%;transform:translateY(-50%);width:22px;height:22px;background:var(--sel)}
+.add.r{right:-13px} .add.l{left:-13px}
+.del{top:-10px;left:-10px;width:20px;height:20px;background:#ef4444}
+.del.l{left:auto;right:-10px}
+.del:hover{background:#dc2626}
+.add::before,.add::after,.del::before,.del::after{content:'';position:absolute;left:50%;top:50%;width:10px;height:2px;border-radius:1px;background:#fff;transform:translate(-50%,-50%)}
+.add::after{transform:translate(-50%,-50%) rotate(90deg)}
+.del::before,.del::after{width:9px}
+.del::before{transform:translate(-50%,-50%) rotate(45deg)}
+.del::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.node:not(.selected) .add,.node:not(.selected) .del,.node:not(.selected) .memo{display:none}
+.note{position:absolute;transform:translateY(-100%);width:max-content;min-width:60px;max-width:220px;padding:0 8px 3px;
+  font-size:12px;line-height:16px;color:var(--muted);white-space:pre-wrap;word-break:break-word;border-bottom:2px solid var(--c);cursor:text;outline:none}
+.note:empty::before{content:'輸入備註';color:var(--line)}
+.memo{position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);height:18px;padding:0 8px;border:1px solid var(--line);border-radius:9px;
+  background:var(--panel);color:var(--muted);font-size:11px;line-height:16px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.memo:hover{color:var(--text);border-color:var(--muted)}
+
+.term{position:relative;color:var(--term);cursor:help}
+.term::after{content:'';position:absolute;top:-3px;right:-5px;width:6px;height:6px;border-radius:50%;background:var(--term)}
+.root .term{color:var(--termOnRoot)} .root .term::after{background:var(--termOnRoot)}
+#markBtn{position:fixed;z-index:30;transform:translate(-50%,-100%);padding:4px 10px;border:0;border-radius:8px;background:var(--term);color:#fff;
+  font-size:12px;font-family:inherit;cursor:pointer;box-shadow:var(--shadow)}
+#termCard{position:fixed;z-index:30;width:300px;max-width:calc(100vw - 24px);padding:14px;font-size:13px;line-height:1.6;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.14)}
+#termCard img{float:right;width:64px;height:64px;object-fit:cover;border-radius:8px;margin:0 0 6px 10px}
+#termCard .t{font-weight:600;font-size:14px;margin-bottom:4px}
+#termCard p{margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
+#termCard .muted{color:var(--muted)}
+#termCard a{color:var(--term);text-decoration:none}
+#termCard button{font-family:inherit;cursor:pointer}
+#termCard .opt{display:block;width:100%;margin-top:6px;padding:6px 8px;text-align:left;font-size:12px;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:8px}
+#termCard .opt:hover{border-color:var(--term)}
+#termCard .opt span{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#termCard .retry{padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--text)}
+#termCard .foot{clear:both;display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+#termCard .unmark{border:0;background:transparent;color:var(--muted);font-size:11px;padding:0}
+#termCard .unmark:hover{color:#ef4444}
+
+#help{position:fixed;left:12px;bottom:12px;z-index:10;padding:10px 14px;font-size:12px;line-height:1.8;color:var(--muted);
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}
+#help kbd{display:inline-block;min-width:20px;padding:0 5px;margin-right:4px;text-align:center;font-family:inherit;font-size:11px;
+  color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:4px}
+#help.hidden .rows{display:none}
+#help .head{cursor:pointer;color:var(--text);font-weight:500}
+@media (max-width:640px){#help{display:none}}
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <button id="bNew" title="新建導圖">新建</button>
+  <span class="sep"></span>
+  <button id="bChild" title="新增子主題 (Tab)">＋子主題</button>
+  <button id="bDelete" title="刪除 (Delete)">刪除</button>
+  <span class="sep"></span>
+  <button id="bUndo" title="復原 (⌘Z)">復原</button>
+  <button id="bRedo" title="重做 (⇧⌘Z)">重做</button>
+  <span class="sep"></span>
+  <button id="bZoomOut" title="縮小 (-)">−</button>
+  <button id="zoomLabel" title="重設為 100%">100%</button>
+  <button id="bZoomIn" title="放大 (+)">＋</button>
+  <button id="bFit" title="全部顯示 (0)">置中</button>
+  <span class="sep"></span>
+  <button id="bExport" title="匯出 JSON">匯出</button>
+  <button id="bMd" title="匯出 Markdown 大綱">Markdown</button>
+  <button id="bImport" title="匯入 JSON">匯入</button>
+  <input id="fileInput" type="file" accept=".json,application/json" hidden>
+</div>
+
+<div id="stage">
+  <div id="world">
+    <svg id="edges" width="1" height="1"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<div id="help">
+  <div class="head" id="helpHead">快捷鍵 ▾</div>
+  <div class="rows">
+    <div><kbd>Tab</kbd>新增子主題</div>
+    <div><kbd>Enter</kbd>新增同級主題</div>
+    <div><kbd>Space</kbd>或雙擊 編輯文字</div>
+    <div><kbd>Delete</kbd>刪除主題</div>
+    <div><kbd>N</kbd>新增／編輯備註</div>
+    <div><kbd>/</kbd>摺疊／展開</div>
+    <div><kbd>←↑↓→</kbd>切換選取</div>
+    <div><kbd>⌘Z</kbd>復原 <kbd>⇧⌘Z</kbd>重做</div>
+    <div>拖曳主題到另一個主題上可移動</div>
+    <div>拖曳空白處平移，⌘/雙指縮放</div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), world = $('#world'), edgesEl = $('#edges'), nodesEl = $('#nodes');
+const PALETTE = ['#ef6461','#f4a259','#e2b93b','#5cb85c','#4ea8de','#8e7dbe','#e07bb5','#2ec4b6'];
+const KEY = 'mindmap-v1';
+const GAPX = 56, GAPY = 14;
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+let root, selected, editing = null;
+let undoStack = [], redoStack = [];
+let view = { x: 0, y: 0, s: 1 };
+let index = new Map();   // id -> { n, p, depth, color, side }
+let visible = [];
+
+/* ---------- 資料 ---------- */
+function node(text, side) { const n = { id: uid(), text, children: [] }; if (side) n.side = side; return n; }
+function defaultMap() {
+  const r = node('中心主題');
+  r.children = [node('想法 1', 'R'), node('想法 2', 'R'), node('想法 3', 'L'), node('想法 4', 'L')];
+  r.children[0].children = [node('細節 A'), node('細節 B')];
+  r.children[1].note = '5 萬，含設備';
+  r.children[0].children[0].note = '用 BTC 付款';
+  r.children[2].note = '下週確認';
+  return r;
+}
+function ser(pretty) { return JSON.stringify(root, (k, v) => k[0] === '_' ? undefined : v, pretty ? 2 : 0); }
+function load() {
+  try { const d = localStorage.getItem(KEY); if (d) return JSON.parse(d); } catch (e) {}
+  return defaultMap();
+}
+function save() { try { localStorage.setItem(KEY, ser()); } catch (e) {} }
+
+function reindex() {
+  index.clear();
+  (function walk(n, p, depth, color, side) {
+    n._side = side;
+    index.set(n.id, { n, p, depth, color, side });
+    n.children.forEach((c, i) => {
+      const cs = depth === 0 ? (c.side === 'L' ? -1 : 1) : side;
+      walk(c, n, depth + 1, depth === 0 ? PALETTE[i % PALETTE.length] : color, cs);
+    });
+  })(root, null, 0, null, 0);
+}
+const cur = () => index.get(selected);
+function isInside(ancestorId, id) {
+  for (let i = index.get(id); i; i = i.p && index.get(i.p.id)) if (i.n.id === ancestorId) return true;
+  return false;
+}
+function lighterSide() {
+  const r = root.children.filter(c => c.side !== 'L').length;
+  return r <= root.children.length - r ? 'R' : 'L';
+}
+
+/* ---------- 歷史 ---------- */
+function commit(fn) {
+  undoStack.push(ser()); if (undoStack.length > 200) undoStack.shift();
+  redoStack = [];
+  fn(); save(); render();
+}
+function undo() { if (!undoStack.length) return; redoStack.push(ser()); root = JSON.parse(undoStack.pop()); save(); render(); }
+function redo() { if (!redoStack.length) return; undoStack.push(ser()); root = JSON.parse(redoStack.pop()); save(); render(); }
+
+/* ---------- 渲染 ---------- */
+function render() {
+  reindex();
+  // 重建 DOM 會移除正在編輯的元素，且不會觸發 blur，所以在這裡結束編輯狀態
+  editing = null;
+  markBtn.hidden = true;
+  if (!index.has(selected)) selected = root.id;
+  // 選取的節點若被摺疊隱藏，改選最近的可見祖先
+  for (let i = cur(); i.p; i = index.get(i.p.id)) if (i.p.collapsed) selected = i.p.id;
+
+  nodesEl.innerHTML = '';
+  visible = [];
+  (function walk(n) {
+    const info = index.get(n.id);
+    const el = document.createElement('div');
+    el.className = 'node' + (n === root ? ' root' : info.depth === 1 ? ' d1' : '') + (n.id === selected ? ' selected' : '');
+    el.dataset.id = n.id;
+    el.style.setProperty('--c', info.color || 'var(--root)');
+    const t = document.createElement('span');
+    t.className = 'text'; rich(t, n.text);
+    el.appendChild(t);
+    if (n !== root && n.children.length) {
+      const b = document.createElement('button');
+      b.className = 'toggle ' + (info.side < 0 ? 'l' : 'r') + (n.collapsed ? '' : ' open');
+      b.textContent = n.collapsed ? n.children.length : '−';
+      b.title = n.collapsed ? '展開' : '摺疊';
+      b.addEventListener('click', e => { e.stopPropagation(); toggle(n.id); });
+      el.appendChild(b);
+    }
+    const add = document.createElement('button');
+    add.className = 'add ' + (info.side < 0 ? 'l' : 'r');
+    add.setAttribute('aria-label', '新增子主題'); add.title = '新增子主題';
+    add.addEventListener('click', e => { e.stopPropagation(); setSelected(n.id); addChild(); });
+    el.appendChild(add);
+    if (n !== root) {
+      const del = document.createElement('button');
+      del.className = 'del ' + (info.side < 0 ? 'l' : 'r'); del.setAttribute('aria-label', '刪除'); del.title = '刪除';
+      del.addEventListener('click', e => { e.stopPropagation(); setSelected(n.id); removeSelected(); });
+      el.appendChild(del);
+    }
+    if (!n.note && !n._editingNote) {
+      const memo = document.createElement('button');
+      memo.className = 'memo'; memo.textContent = '✎ 備註'; memo.title = '新增備註 (N)';
+      memo.addEventListener('click', e => { e.stopPropagation(); editNote(n.id); });
+      el.appendChild(memo);
+    }
+    nodesEl.appendChild(el);
+    n._el = el;
+    n._noteEl = null;
+    if (n.note || n._editingNote) {
+      const note = document.createElement('div');
+      note.className = 'note'; note.dataset.id = n.id;
+      note.style.setProperty('--c', info.color || 'var(--root)');
+      rich(note, n.note || '');
+      note.addEventListener('click', e => { e.stopPropagation(); if (e.target.closest('.term')) return; if (editing !== n.id) { setSelected(n.id); editNote(n.id); } });
+      nodesEl.appendChild(note);
+      n._noteEl = note;
+    }
+    visible.push(n);
+    if (!n.collapsed) n.children.forEach(walk);
+  })(root);
+  relayout();
+  updateButtons();
+  if (!card.hidden) placeCard();
+}
+
+// 把已標註的名詞包成 <span class="term">
+function rich(el, text) {
+  const keys = Object.keys(root.terms || {}).sort((a, b) => b.length - a.length);
+  if (!keys.length) { el.textContent = text; return; }
+  const re = new RegExp(keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gi');
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    el.append(text.slice(last, m.index));
+    const span = document.createElement('span');
+    span.className = 'term'; span.textContent = m[0];
+    span.dataset.term = keys.find(k => k.toLowerCase() === m[0].toLowerCase());
+    el.append(span);
+    last = m.index + m[0].length;
+  }
+  el.append(text.slice(last));
+}
+
+function measureH(n) {
+  if (n.collapsed || !n.children.length) return n._sh = n._h;
+  const s = n.children.reduce((a, c) => a + measureH(c), 0) + GAPY * (n.children.length - 1);
+  return n._sh = Math.max(n._h, s);
+}
+function placeKids(kids, parent, side) {
+  const total = kids.reduce((a, c) => a + c._sh, 0) + GAPY * (kids.length - 1);
+  let y = parent._y - total / 2;
+  for (const c of kids) {
+    c._y = y + c._sh / 2;
+    c._x = side > 0 ? parent._x + parent._w + GAPX : parent._x - GAPX - c._w;
+    if (!c.collapsed) placeKids(c.children, c, side);
+    y += c._sh + GAPY;
+  }
+}
+function relayout() {
+  for (const n of visible) {
+    n._bw = n._el.offsetWidth; n._h = n._el.offsetHeight;
+    n._nw = n._noteEl ? n._noteEl.offsetWidth : 0;
+    n._w = n._bw + n._nw;
+  }
+  root.children.forEach(measureH);
+  root._x = -root._w / 2; root._y = 0;
+  placeKids(root.children.filter(c => c.side !== 'L'), root, 1);
+  placeKids(root.children.filter(c => c.side === 'L'), root, -1);
+
+  let paths = '';
+  for (const n of visible) {
+    const left = n._side < 0;
+    n._el.style.left = (left ? n._x + n._nw : n._x) + 'px';
+    n._el.style.top = n._y + 'px';
+    if (n._noteEl) {
+      n._noteEl.style.left = (left ? n._x : n._x + n._bw) + 'px';
+      n._noteEl.style.top = n._y + 'px';
+    }
+    // 有備註時，+ 和摺疊按鈕移到底線末端
+    for (const [cls, off] of [['.add', 13], ['.toggle', 12]]) {
+      const b = n._el.querySelector(cls);
+      if (b) b.style[left ? 'left' : 'right'] = n._nw ? -(n._nw + off) + 'px' : '';
+    }
+    if (n === root) continue;
+    const info = index.get(n.id), p = info.p;
+    const x1 = info.side > 0 ? p._x + p._w : p._x, y1 = p._y;
+    const x2 = info.side > 0 ? n._x : n._x + n._w, y2 = n._y;
+    const mx = (x1 + x2) / 2;
+    paths += `<path d="M${x1} ${y1}C${mx} ${y1},${mx} ${y2},${x2} ${y2}" stroke="${info.color}" stroke-width="${info.depth === 1 ? 3 : 2}"/>`;
+  }
+  edgesEl.innerHTML = paths;
+}
+
+function applyView() {
+  world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  if (!card.hidden) placeCard();
+  $('#zoomLabel').textContent = Math.round(view.s * 100) + '%';
+}
+function updateButtons() {
+  $('#bUndo').disabled = !undoStack.length; $('#bUndo').style.opacity = undoStack.length ? 1 : .4;
+  $('#bRedo').disabled = !redoStack.length; $('#bRedo').style.opacity = redoStack.length ? 1 : .4;
+}
+function setSelected(id) {
+  selected = id;
+  nodesEl.querySelectorAll('.node').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+}
+
+/* ---------- 視圖 ---------- */
+function zoomAt(cx, cy, f) {
+  const s = Math.min(3, Math.max(0.2, view.s * f));
+  f = s / view.s;
+  view.x = cx - (cx - view.x) * f; view.y = cy - (cy - view.y) * f; view.s = s;
+  applyView();
+}
+function fit() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of visible) {
+    x0 = Math.min(x0, n._x); x1 = Math.max(x1, n._x + n._w);
+    y0 = Math.min(y0, n._y - n._h / 2); y1 = Math.max(y1, n._y + n._h / 2);
+  }
+  const pad = 60, top = 60, w = x1 - x0, h = y1 - y0;
+  view.s = Math.max(0.2, Math.min(1.2, (innerWidth - pad * 2) / w, (innerHeight - top - pad * 2) / h));
+  view.x = innerWidth / 2 - (x0 + w / 2) * view.s;
+  view.y = (innerHeight + top) / 2 - (y0 + h / 2) * view.s;
+  applyView();
+}
+function ensureVisible(n) {
+  const m = 40, r = n._el.getBoundingClientRect();
+  let dx = 0, dy = 0;
+  if (r.left < m) dx = m - r.left; else if (r.right > innerWidth - m) dx = innerWidth - m - r.right;
+  if (r.top < 70) dy = 70 - r.top; else if (r.bottom > innerHeight - m) dy = innerHeight - m - r.bottom;
+  if (dx || dy) { view.x += dx; view.y += dy; applyView(); }
+}
+
+/* ---------- 操作 ---------- */
+function addChild() {
+  const { n } = cur();
+  const c = node('新主題', n === root ? lighterSide() : undefined);
+  commit(() => { n.collapsed = false; n.children.push(c); selected = c.id; });
+  edit(c.id);
+}
+function addSibling() {
+  const { n, p } = cur();
+  if (!p) return addChild();
+  const c = node('新主題', p === root ? n.side || 'R' : undefined);
+  commit(() => { p.children.splice(p.children.indexOf(n) + 1, 0, c); selected = c.id; });
+  edit(c.id);
+}
+function removeSelected() {
+  const { n, p } = cur();
+  if (!p) return;
+  const i = p.children.indexOf(n);
+  commit(() => {
+    p.children.splice(i, 1);
+    const next = p.children[i] || p.children[i - 1] || p;
+    selected = next.id;
+  });
+}
+function toggle(id) {
+  const { n } = index.get(id);
+  if (!n.children.length || n === root) return;
+  commit(() => { n.collapsed = !n.collapsed; });
+}
+function moveNode(id, targetId) {
+  const { n, p } = index.get(id), t = index.get(targetId).n;
+  commit(() => {
+    p.children.splice(p.children.indexOf(n), 1);
+    if (t === root) n.side = lighterSide(); else delete n.side;
+    t.collapsed = false;
+    t.children.push(n);
+    selected = n.id;
+  });
+}
+function nav(dir) {
+  const { n, p, side } = cur();
+  const kidsOn = s => n.collapsed ? [] : n === root ? n.children.filter(c => (c.side === 'L' ? -1 : 1) === s) : n.children;
+  let t;
+  if (dir === 'up' || dir === 'down') {
+    if (!p) return;
+    const sibs = p === root ? p.children.filter(c => (c.side === 'L' ? -1 : 1) === side) : p.children;
+    t = sibs[sibs.indexOf(n) + (dir === 'up' ? -1 : 1)];
+  } else {
+    const d = dir === 'right' ? 1 : -1;
+    if (n === root) t = kidsOn(d)[0];
+    else if (d === side) { const k = kidsOn(side); t = k[Math.floor((k.length - 1) / 2)]; }
+    else t = p;
+  }
+  if (t) { setSelected(t.id); ensureVisible(t); }
+}
+
+/* ---------- 編輯文字 ---------- */
+function editNote(id) {
+  const info = index.get(id);
+  if (!info) return;
+  info.n._editingNote = true;
+  render();
+  edit(id, true);
+}
+function edit(id, isNote) {
+  const info = index.get(id);
+  if (!info) return;
+  const n = info.n, t = isNote ? n._noteEl : n._el.querySelector('.text');
+  ensureVisible(n);
+  hideCard();
+  t.textContent = isNote ? n.note || '' : n.text;
+  editing = id;
+  t.contentEditable = 'plaintext-only';
+  if (t.contentEditable !== 'plaintext-only') t.contentEditable = 'true';
+  t.focus();
+  const range = document.createRange(); range.selectNodeContents(t);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+
+  const done = ok => {
+    if (editing !== id) return;
+    editing = null;
+    markBtn.hidden = true;
+    const v = t.innerText.replace(/\n+$/, '').trim();
+    if (isNote) {
+      delete n._editingNote;
+      if (ok && v !== (n.note || '')) commit(() => { if (v) n.note = v; else delete n.note; });
+      else render();
+    } else if (ok && v && v !== n.text) commit(() => { n.text = v; });
+    else render();
+  };
+  t.addEventListener('input', relayout);
+  t.addEventListener('blur', () => done(true));
+  t.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.isComposing || e.keyCode === 229) return;   // 中文輸入法選字中
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); done(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); done(false); }
+    else if (e.key === 'Tab') { e.preventDefault(); done(true); addChild(); }
+  });
+}
+
+/* ---------- 滑鼠／觸控 ---------- */
+stage.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  const term = e.target.closest('.term');
+  if (term && !editing) { setSelected(term.closest('[data-id]').dataset.id); showCard(term.dataset.term, term); return; }
+  hideCard();
+  if (e.target.closest('.toggle,.add,.del,.memo,.note')) return;
+  const el = e.target.closest('.node');
+  if (el) {
+    if (el.dataset.id === editing) return;
+    setSelected(el.dataset.id);
+    startNodeDrag(e, el.dataset.id);
+  } else startPan(e);
+});
+stage.addEventListener('dblclick', e => {
+  const el = e.target.closest('.node');
+  if (el && !e.target.closest('.toggle,.add,.del,.memo')) edit(el.dataset.id);
+});
+
+function startPan(e) {
+  stage.classList.add('panning');
+  const sx = e.clientX - view.x, sy = e.clientY - view.y;
+  const move = ev => { view.x = ev.clientX - sx; view.y = ev.clientY - sy; applyView(); };
+  const up = () => { stage.classList.remove('panning'); removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+  addEventListener('pointermove', move); addEventListener('pointerup', up);
+}
+
+function startNodeDrag(e, id) {
+  if (id === root.id) return;
+  const sx = e.clientX, sy = e.clientY;
+  let dragging = false, target = null;
+  const move = ev => {
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    if (!dragging && Math.hypot(dx, dy) < 5) return;
+    const info = index.get(id);
+    if (!info || editing) return;
+    const el = info.n._el;
+    if (!dragging) { dragging = true; el.classList.add('dragging'); document.body.classList.add('is-dragging'); }
+    el.style.translate = `${dx / view.s}px ${dy / view.s}px`;
+    nodesEl.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
+    const under = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.node');
+    target = null;
+    if (under && !isInside(id, under.dataset.id) && under.dataset.id !== info.p.id) {
+      target = under.dataset.id; under.classList.add('drop');
+    }
+  };
+  const up = () => {
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+    if (!dragging) return;
+    document.body.classList.remove('is-dragging');
+    if (target) moveNode(id, target); else render();
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up);
+}
+
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01));
+  else { view.x -= e.deltaX; view.y -= e.deltaY; applyView(); }
+}, { passive: false });
+
+/* ---------- 鍵盤 ---------- */
+document.addEventListener('keydown', e => {
+  if (editing || e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape' && !card.hidden) { hideCard(); return; }
+  const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+  if (mod) return;
+  const acts = {
+    'Tab': addChild, 'Insert': addChild, 'Enter': addSibling,
+    'Delete': removeSelected, 'Backspace': removeSelected,
+    ' ': () => edit(selected), 'F2': () => edit(selected), '/': () => toggle(selected), 'n': () => editNote(selected), 'N': () => editNote(selected),
+    'ArrowUp': () => nav('up'), 'ArrowDown': () => nav('down'), 'ArrowLeft': () => nav('left'), 'ArrowRight': () => nav('right'),
+    '=': () => zoomAt(innerWidth / 2, innerHeight / 2, 1.2), '+': () => zoomAt(innerWidth / 2, innerHeight / 2, 1.2),
+    '-': () => zoomAt(innerWidth / 2, innerHeight / 2, 1 / 1.2), '0': fit,
+  };
+  if (acts[e.key]) { e.preventDefault(); acts[e.key](); }
+});
+
+/* ---------- 匯入／匯出 ---------- */
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const fileName = ext => (root.text.replace(/[\\/:*?"<>|\n]/g, '').slice(0, 40) || 'mindmap') + ext;
+function toMarkdown() {
+  const lines = ['# ' + root.text, ''];
+  (function walk(n, d) { for (const c of n.children) { lines.push('  '.repeat(d) + '- ' + c.text.replace(/\n/g, ' ') + (c.note ? '：' + c.note.replace(/\n/g, ' ') : '')); walk(c, d + 1); } })(root, 0);
+  return lines.join('\n') + '\n';
+}
+function valid(n) { return n && typeof n.text === 'string' && Array.isArray(n.children) && n.children.every(valid); }
+function withIds(n) { n.id = n.id || uid(); n.children.forEach(withIds); return n; }
+
+$('#bNew').onclick = () => {
+  if (!confirm('建立新的導圖？目前內容會被取代（可以用「復原」找回）。')) return;
+  commit(() => { root = node('中心主題'); selected = root.id; });
+  fit();
+};
+$('#bChild').onclick = addChild;
+$('#bDelete').onclick = removeSelected;
+$('#bUndo').onclick = undo;
+$('#bRedo').onclick = redo;
+$('#bZoomIn').onclick = () => zoomAt(innerWidth / 2, innerHeight / 2, 1.2);
+$('#bZoomOut').onclick = () => zoomAt(innerWidth / 2, innerHeight / 2, 1 / 1.2);
+$('#zoomLabel').onclick = () => zoomAt(innerWidth / 2, innerHeight / 2, 1 / view.s);
+$('#bFit').onclick = fit;
+$('#bExport').onclick = () => download(fileName('.json'), ser(true), 'application/json');
+$('#bMd').onclick = () => download(fileName('.md'), toMarkdown(), 'text/markdown');
+$('#bImport').onclick = () => $('#fileInput').click();
+$('#fileInput').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!valid(data)) throw new Error('格式不符');
+    commit(() => { root = withIds(data); selected = root.id; });
+    fit();
+  } catch (err) { alert('無法匯入：' + err.message); }
+};
+$('#helpHead').onclick = () => {
+  $('#help').classList.toggle('hidden');
+  $('#helpHead').textContent = $('#help').classList.contains('hidden') ? '快捷鍵 ▸' : '快捷鍵 ▾';
+};
+// 工具列按鈕不搶走焦點，避免中斷編輯
+$('#toolbar').addEventListener('mousedown', e => e.preventDefault());
+addEventListener('resize', applyView);
+
+/* ---------- 名詞標註 + 維基百科 ---------- */
+const WIKI = 'https://zh.wikipedia.org';
+const markBtn = Object.assign(document.createElement('button'), { id: 'markBtn', textContent: '標註名詞', hidden: true });
+const card = Object.assign(document.createElement('div'), { id: 'termCard', hidden: true });
+document.body.append(markBtn, card);
+let cardTerm = null, cardAnchor = null;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// 編輯文字時選取一段字，上方浮出「標註名詞」
+document.addEventListener('selectionchange', () => {
+  const sel = getSelection(), el = editing && document.activeElement;
+  const word = sel.toString().trim();
+  if (!el || sel.isCollapsed || !el.contains(sel.anchorNode) || !word || word.length > 40 || word.includes('\n')) return markBtn.hidden = true;
+  const r = sel.getRangeAt(0).getBoundingClientRect();
+  markBtn.style.left = r.left + r.width / 2 + 'px';
+  markBtn.style.top = r.top - 8 + 'px';
+  markBtn.hidden = false;
+});
+markBtn.addEventListener('mousedown', e => e.preventDefault());   // 保留選取範圍
+markBtn.addEventListener('click', () => {
+  const word = getSelection().toString().trim();
+  markBtn.hidden = true;
+  document.activeElement.blur();   // 先存下正在編輯的文字
+  if (!word) return;
+  if (!root.terms?.[word]) commit(() => { (root.terms ||= {})[word] = {}; });
+  showCard(word);
+});
+
+function findTermSpan(term) { return [...nodesEl.querySelectorAll('.term')].find(s => s.dataset.term === term); }
+function showCard(term, anchor) {
+  const d = root.terms?.[term];
+  if (!d) return;
+  cardTerm = term; cardAnchor = anchor || findTermSpan(term);
+  card.hidden = false;
+  drawCard(); placeCard();
+  if (!d.extract && !d._choices && !d._error && !d._loading) lookup(term);
+}
+function hideCard() { card.hidden = true; cardTerm = null; }
+function placeCard() {
+  if (!cardAnchor?.isConnected) cardAnchor = findTermSpan(cardTerm);
+  if (!cardAnchor || !root.terms?.[cardTerm]) return hideCard();
+  const r = cardAnchor.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+  const x = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), innerWidth - w - 12);
+  let y = r.bottom + 10;
+  if (y + h > innerHeight - 12) y = Math.max(12, r.top - h - 10);
+  card.style.left = x + 'px'; card.style.top = y + 'px';
+}
+function drawCard() {
+  const d = root.terms?.[cardTerm];
+  if (!d) return hideCard();
+  let body;
+  if (d.extract) body = (d.thumb ? `<img src="${esc(d.thumb)}" alt="">` : '') +
+    `<div class="t">${esc(d.title)}</div><p>${esc(d.extract)}</p><a href="${esc(d.url)}" target="_blank" rel="noopener">在維基百科閱讀 ↗</a>`;
+  else if (d._choices) body = `<div class="t">「${esc(cardTerm)}」有好幾個意思，選一個：</div>` +
+    d._choices.map((c, i) => `<button class="opt" data-i="${i}"><b>${esc(c.title)}</b><span>${esc(c.snippet)}</span></button>`).join('');
+  else if (d._error) body = `<div class="t">${esc(cardTerm)}</div><p class="muted">${esc(d._error)}</p><button class="retry">重試</button>`;
+  else body = `<div class="t">${esc(cardTerm)}</div><p class="muted">正在查詢維基百科…</p>`;
+  card.innerHTML = body + `<div class="foot"><span>來源：維基百科</span><span>${d.extract ? '<button class="rechoose">換一個意思</button>　' : ''}<button class="unmark">取消標註</button></span></div>`;
+  card.querySelector('.rechoose')?.classList.add('unmark');
+}
+function refreshCard(term) { if (cardTerm === term && !card.hidden) { drawCard(); placeCard(); } }
+
+async function wikiSummary(title) {
+  const r = await fetch(`${WIKI}/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`, { headers: { 'Accept-Language': 'zh-TW' } });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function storeSummary(term, s) {
+  const d = root.terms?.[term];
+  if (!d) return;
+  const title = (s.titles?.display || s.title).replace(/<[^>]+>/g, '');
+  Object.assign(d, { title, extract: s.extract, url: s.content_urls?.desktop?.page || `${WIKI}/wiki/${encodeURIComponent(s.title)}`, thumb: s.thumbnail?.source });
+  if (!d.thumb) delete d.thumb;
+  delete d._choices; delete d._error;
+  save(); refreshCard(term);
+}
+async function lookup(term, forceChoose) {
+  const d = root.terms?.[term];
+  if (!d) return;
+  d._loading = true; delete d._error; delete d._choices;
+  refreshCard(term);
+  try {
+    const s = forceChoose ? null : await wikiSummary(term);
+    if (s && s.type === 'standard' && s.extract) return storeSummary(term, s);
+    const q = await fetch(`${WIKI}/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term)}&srlimit=6&format=json&origin=*`).then(r => r.json());
+    const list = (q.query?.search || [])
+      .filter(x => !/消歧義|消歧义/.test(x.snippet) && x.title !== s?.title)
+      .map(x => ({ title: x.title, snippet: x.snippet.replace(/<[^>]+>/g, '') }));
+    if (list.length) d._choices = list; else d._error = '維基百科查不到這個詞。';
+  } catch (e) {
+    d._error = '連不上維基百科，請檢查網路後重試。';
+  } finally { d._loading = false; }
+  refreshCard(term);
+}
+async function chooseMeaning(term, title) {
+  const d = root.terms?.[term];
+  delete d._choices; d._loading = true;
+  refreshCard(term);
+  try {
+    const s = await wikiSummary(title);
+    if (s?.extract) storeSummary(term, s); else d._error = '這個條目沒有摘要。';
+  } catch (e) { d._error = '連不上維基百科，請檢查網路後重試。'; }
+  finally { d._loading = false; }
+  refreshCard(term);
+}
+card.addEventListener('click', e => {
+  const term = cardTerm, d = root.terms?.[term];
+  const opt = e.target.closest('.opt');
+  if (opt) chooseMeaning(term, d._choices[+opt.dataset.i].title);
+  else if (e.target.closest('.retry')) lookup(term);
+  else if (e.target.closest('.rechoose')) { ['title', 'extract', 'url', 'thumb'].forEach(k => delete d[k]); save(); lookup(term, true); }
+  else if (e.target.closest('.unmark')) { hideCard(); commit(() => { delete root.terms[term]; }); }
+});
+document.addEventListener('pointerdown', e => { if (!card.hidden && !card.contains(e.target) && !stage.contains(e.target)) hideCard(); });
+
+/* ---------- 啟動 ---------- */
+root = load();
+selected = root.id;
+render();
+fit();
+</script>
+</body>
+</html>

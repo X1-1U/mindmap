@@ -1,0 +1,341 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E171F7412B1771C8053FB1C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8DCC227C8C52299244D0F12 /* LaunchScreen.storyboard */; };
+		14FB1230A4A57B2C25C71A8D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBEF67E4992386E1F44A1A6 /* UIKit.framework */; };
+		18FEB72B035C09DA10F2A567 /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A2491F77B56D32CAD9E4C08F /* libapp.a */; };
+		1AC9A570A356A6EE7A80A3B7 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 79A5B0775FAC3AA29596252B /* CoreGraphics.framework */; };
+		5E1B7170AFC214FECC73FE5B /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23DF0B4C30DB55F04F952407 /* Metal.framework */; };
+		6CC0DBB79A7055FAAA15F5F2 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2834783E6C92EF28DA7CA50 /* QuartzCore.framework */; };
+		7FC0F165195E0CA1187AD3DB /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = C0CF3E4654DB670D258F8476 /* main.mm */; };
+		8C215071B5C3BB250AE08545 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 804137C1BD0D63E81B3CB4D2 /* MetalKit.framework */; };
+		B9D2EA73D7F545187C5DE999 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C773FD9F515457EB2844727E /* Security.framework */; };
+		CA11DFBD7A3CA61119F53B67 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = A1392EF3FB33C584DBD8C866 /* assets */; };
+		CF9CAEE4E4F065874011456B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 631664B9038557299571F426 /* Assets.xcassets */; };
+		ED2F0F10EB9A5BE05DE86611 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E7D9423F1199FE161EBD888 /* WebKit.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0E7D9423F1199FE161EBD888 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		0FC264BF64B7A050FBDD60DC /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
+		1918F11F964B7C681A125F0D /* mindmap_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = mindmap_iOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		23DF0B4C30DB55F04F952407 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		2A766D6BB36CDF460FAE8026 /* main.rs */ = {isa = PBXFileReference; path = main.rs; sourceTree = "<group>"; };
+		631664B9038557299571F426 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		79A5B0775FAC3AA29596252B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		804137C1BD0D63E81B3CB4D2 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		868E98216D5CD5F759ED0B84 /* mindmap_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = mindmap_iOS.entitlements; sourceTree = "<group>"; };
+		9BF89C900619F159F9EEBE7B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A1392EF3FB33C584DBD8C866 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
+		A2491F77B56D32CAD9E4C08F /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
+		A2834783E6C92EF28DA7CA50 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		C0CF3E4654DB670D258F8476 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		C773FD9F515457EB2844727E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		D8814CAB3986A24F7D070EE3 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		F8DCC227C8C52299244D0F12 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		FBBEF67E4992386E1F44A1A6 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CFBEA48E97B347F5F60C9BDF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				18FEB72B035C09DA10F2A567 /* libapp.a in Frameworks */,
+				1AC9A570A356A6EE7A80A3B7 /* CoreGraphics.framework in Frameworks */,
+				5E1B7170AFC214FECC73FE5B /* Metal.framework in Frameworks */,
+				8C215071B5C3BB250AE08545 /* MetalKit.framework in Frameworks */,
+				6CC0DBB79A7055FAAA15F5F2 /* QuartzCore.framework in Frameworks */,
+				B9D2EA73D7F545187C5DE999 /* Security.framework in Frameworks */,
+				14FB1230A4A57B2C25C71A8D /* UIKit.framework in Frameworks */,
+				ED2F0F10EB9A5BE05DE86611 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2533A393BCCCBCBE0662106E /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				B938B95D34F13A080398C52C /* mindmap */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		2F6A753012458D6A3DA64156 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				79A5B0775FAC3AA29596252B /* CoreGraphics.framework */,
+				A2491F77B56D32CAD9E4C08F /* libapp.a */,
+				23DF0B4C30DB55F04F952407 /* Metal.framework */,
+				804137C1BD0D63E81B3CB4D2 /* MetalKit.framework */,
+				A2834783E6C92EF28DA7CA50 /* QuartzCore.framework */,
+				C773FD9F515457EB2844727E /* Security.framework */,
+				FBBEF67E4992386E1F44A1A6 /* UIKit.framework */,
+				0E7D9423F1199FE161EBD888 /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5081C3BB51FDCAFD8FFEC832 /* bindings */ = {
+			isa = PBXGroup;
+			children = (
+				0FC264BF64B7A050FBDD60DC /* bindings.h */,
+			);
+			path = bindings;
+			sourceTree = "<group>";
+		};
+		676C63E8BB985A0905BB7A4A /* Externals */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Externals;
+			sourceTree = "<group>";
+		};
+		79D0D2A85F36AA4618732B7F /* mindmap_iOS */ = {
+			isa = PBXGroup;
+			children = (
+				9BF89C900619F159F9EEBE7B /* Info.plist */,
+				868E98216D5CD5F759ED0B84 /* mindmap_iOS.entitlements */,
+			);
+			path = mindmap_iOS;
+			sourceTree = "<group>";
+		};
+		7B991596C01A9FC21DF1B032 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D8814CAB3986A24F7D070EE3 /* lib.rs */,
+				2A766D6BB36CDF460FAE8026 /* main.rs */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = "<group>";
+		};
+		B938B95D34F13A080398C52C /* mindmap */ = {
+			isa = PBXGroup;
+			children = (
+				C0CF3E4654DB670D258F8476 /* main.mm */,
+				5081C3BB51FDCAFD8FFEC832 /* bindings */,
+			);
+			path = mindmap;
+			sourceTree = "<group>";
+		};
+		E56F008A6C5F12D0DACB34C7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1918F11F964B7C681A125F0D /* mindmap_iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F42ADD9538E329C54008FE2A = {
+			isa = PBXGroup;
+			children = (
+				A1392EF3FB33C584DBD8C866 /* assets */,
+				631664B9038557299571F426 /* Assets.xcassets */,
+				F8DCC227C8C52299244D0F12 /* LaunchScreen.storyboard */,
+				676C63E8BB985A0905BB7A4A /* Externals */,
+				79D0D2A85F36AA4618732B7F /* mindmap_iOS */,
+				2533A393BCCCBCBE0662106E /* Sources */,
+				7B991596C01A9FC21DF1B032 /* src */,
+				2F6A753012458D6A3DA64156 /* Frameworks */,
+				E56F008A6C5F12D0DACB34C7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		887A39417164C3A7DC64971E /* mindmap_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F11632D848414DBED2A2537 /* Build configuration list for PBXNativeTarget "mindmap_iOS" */;
+			buildPhases = (
+				9D144DFD15DFBEE3FA392266 /* Build Rust Code */,
+				224FED62E888B901EEF37E12 /* Sources */,
+				FA1EFE3D04198BBAE39C0C24 /* Resources */,
+				CFBEA48E97B347F5F60C9BDF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = mindmap_iOS;
+			packageProductDependencies = (
+			);
+			productName = mindmap_iOS;
+			productReference = 1918F11F964B7C681A125F0D /* mindmap_iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B98B175F653C9E0BF6B23731 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 67E130581121898344F60F7C /* Build configuration list for PBXProject "mindmap" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F42ADD9538E329C54008FE2A;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E56F008A6C5F12D0DACB34C7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				887A39417164C3A7DC64971E /* mindmap_iOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FA1EFE3D04198BBAE39C0C24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CF9CAEE4E4F065874011456B /* Assets.xcassets in Resources */,
+				0E171F7412B1771C8053FB1C /* LaunchScreen.storyboard in Resources */,
+				CA11DFBD7A3CA61119F53B67 /* assets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9D144DFD15DFBEE3FA392266 /* Build Rust Code */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Rust Code";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Externals/x86_64/${CONFIGURATION}/libapp.a",
+				"$(SRCROOT)/Externals/arm64/${CONFIGURATION}/libapp.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "npm run -- tauri ios xcode-script -v --platform \"${PLATFORM_DISPLAY_NAME:?}\" --sdk-root \"${SDKROOT:?}\" --framework-search-paths \"${FRAMEWORK_SEARCH_PATHS:?}\" --header-search-paths \"${HEADER_SEARCH_PATHS:?}\" --gcc-preprocessor-definitions \"${GCC_PREPROCESSOR_DEFINITIONS:-}\" --configuration \"${CONFIGURATION:?}\" ${FORCE_COLOR} ${ARCHS:?}\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		224FED62E888B901EEF37E12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7FC0F165195E0CA1187AD3DB /* main.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		08D3D351D4811F758F70934E /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = iphoneos;
+			};
+			name = debug;
+		};
+		1B3F7956F91F3AE503F7EFA6 /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				CODE_SIGN_ENTITLEMENTS = mindmap_iOS/mindmap_iOS.entitlements;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = mindmap_iOS/Info.plist;
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.onsunday.mindmap;
+				PRODUCT_NAME = "MindMap";
+				VALID_ARCHS = arm64;
+			};
+			name = debug;
+		};
+		2F338FE932674047069581DF /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ARCHS = (
+					arm64,
+				);
+				CODE_SIGN_ENTITLEMENTS = mindmap_iOS/mindmap_iOS.entitlements;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\".\"",
+				);
+				INFOPLIST_FILE = mindmap_iOS/Info.plist;
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.onsunday.mindmap;
+				PRODUCT_NAME = "MindMap";
+				VALID_ARCHS = arm64;
+			};
+			name = release;
+		};
+		E2580338E3F94981E1609497 /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = iphoneos;
+			};
+			name = release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		67E130581121898344F60F7C /* Build configuration list for PBXProject "mindmap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				08D3D351D4811F758F70934E /* debug */,
+				E2580338E3F94981E1609497 /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+		9F11632D848414DBED2A2537 /* Build configuration list for PBXNativeTarget "mindmap_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1B3F7956F91F3AE503F7EFA6 /* debug */,
+				2F338FE932674047069581DF /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B98B175F653C9E0BF6B23731 /* Project object */;
+}

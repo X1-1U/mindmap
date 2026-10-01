@@ -1,0 +1,25 @@
+{
+  "name": "mindmap",
+  "version": "0.1.0",
+  "private": true,
+  "description": "跨平台思維導圖 App（Mac、Windows、Linux、iOS、Android）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:viewer && tsc && vite build",
+    "build:viewer": "vite build --config vite.viewer.config.ts",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-dialog": "^2.8.1",
+    "@tauri-apps/plugin-fs": "^2.6.0",
+    "@tauri-apps/plugin-opener": "^2.7.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}
