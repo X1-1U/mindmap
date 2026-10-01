@@ -9,6 +9,11 @@ on:
       tag:
         description: '要打包的標籤（例如 v0.1.0）'
         required: true
+      platforms:
+        description: '要打包的平台'
+        type: choice
+        options: [all, desktop, android]
+        default: all
 
 permissions:
   contents: write
@@ -34,6 +39,7 @@ jobs:
 
   desktop:
     needs: create-release
+    if: github.event.inputs.platforms != 'android'
     strategy:
       fail-fast: false
       matrix:
@@ -78,20 +84,17 @@ jobs:
 
   android:
     needs: create-release
+    if: github.event.inputs.platforms != 'desktop'
     runs-on: ubuntu-latest
-    env:
-      NDK_VERSION: 27.0.12077973
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: 安裝 Android NDK
-        run: |
-          sdkmanager --install "ndk;$NDK_VERSION"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+      # GitHub 的 Ubuntu 機器已內建 Android SDK 與 NDK
+      - name: 設定 Android NDK
+        run: echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
