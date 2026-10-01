@@ -73,19 +73,27 @@ function drawNode(ctx: CanvasRenderingContext2D, v: NodeView) {
   ctx.fill();
   if (border) { ctx.lineWidth = border; ctx.strokeStyle = cs.borderTopColor; ctx.stroke(); }
 
-  const padL = parseFloat(cs.paddingLeft), padR = parseFloat(cs.paddingRight), lh = parseFloat(cs.lineHeight) || 20;
+  const padL = parseFloat(cs.paddingLeft), padR = parseFloat(cs.paddingRight);
+  const padT = parseFloat(cs.paddingTop), padB = parseFloat(cs.paddingBottom);
+  const lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.43;
   ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
   ctx.fillStyle = cs.color;
   ctx.textBaseline = 'middle';
   const lines = wrap(ctx, v.n.text, v.bw - padL - padR - border * 2 + 1);
-  const top = v.y - (lines.length * lh) / 2;
-  lines.forEach((l, i) => ctx.fillText(l, bx + border + padL, top + lh * (i + 0.5)));
+  // 依自訂的對齊方式決定文字位置
+  const align = v.el.dataset.align || 'center', valign = v.el.dataset.valign || 'middle';
+  const textH = lines.length * lh, by0 = v.y - v.h / 2;
+  const top = valign === 'top' ? by0 + border + padT : valign === 'bottom' ? by0 + v.h - border - padB - textH : v.y - textH / 2;
+  ctx.textAlign = align === 'left' ? 'left' : align === 'right' ? 'right' : 'center';
+  const tx = align === 'left' ? bx + border + padL : align === 'right' ? bx + v.bw - border - padR : bx + v.bw / 2;
+  lines.forEach((l, i) => ctx.fillText(l, tx, top + lh * (i + 0.5)));
+  ctx.textAlign = 'left';
 
   if (v.noteEl && v.n.note) {
     const ns = getComputedStyle(v.noteEl);
     const nx = v.side < 0 ? v.x : v.x + v.bw;
     ctx.strokeStyle = v.color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = v.depth === 0 ? 3 : 2;
     ctx.beginPath();
     ctx.moveTo(nx, v.y);
     ctx.lineTo(nx + v.nw, v.y);

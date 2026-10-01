@@ -5,6 +5,7 @@ import { countNodes, newDoc, serialize, uid } from './model';
 import { IMPORT_EXTENSIONS, fileBaseName, importFile, toMarkdown, toOPML } from './formats';
 import { exportHTML, exportPNG } from './export';
 import { openUrl, pickFile, saveFile, storage, type StoredMeta } from './platform';
+import { createStylePanel } from './stylepanel';
 import { alertDialog, chooseOpenMode, confirmDialog, h, showMenu, toast } from './ui';
 
 const app = document.getElementById('app')!;
@@ -152,10 +153,12 @@ async function showEditor(doc: MindMapDoc, ctx: EditorContext) {
   const undoBtn = h('button', { class: 'wide', title: '復原 (⌘Z)', onclick: () => editor!.undo(), disabled: '' }, '復原') as HTMLButtonElement;
   const redoBtn = h('button', { class: 'wide', title: '重做 (⇧⌘Z)', onclick: () => editor!.redo(), disabled: '' }, '重做') as HTMLButtonElement;
   const sep = (wide = false) => h('span', { class: 'sep' + (wide ? ' wide' : '') });
+  const stylePanel = createStylePanel(() => editor);
   const toolbar = h('div', { class: 'toolbar' },
     ...(readonly ? [] : [
       h('button', { class: 'wide', title: '新增子主題 (Tab)', onclick: () => editor!.addChild() }, '＋子主題'),
       h('button', { class: 'wide', title: '刪除 (Delete)', onclick: () => editor!.removeSelected() }, '刪除'),
+      h('button', { class: 'wide', title: '主題樣式：對齊、字體、顏色、大小', onclick: () => stylePanel.toggle() }, '樣式'),
       sep(true), undoBtn, redoBtn, sep(true),
     ]),
     h('button', { title: '縮小 (-)', onclick: () => editor!.zoom(1 / 1.2) }, '−'),
@@ -184,11 +187,12 @@ async function showEditor(doc: MindMapDoc, ctx: EditorContext) {
     tab('＋', '子主題', () => editor!.addChild()),
     tab('✎', '編輯', () => editor!.edit()),
     tab('≡', '備註', () => editor!.editNote()),
+    tab('Aa', '樣式', () => stylePanel.toggle()),
     tab('×', '刪除', () => editor!.removeSelected()),
     tab('↶', '復原', () => editor!.undo()));
 
   app.replaceChildren(h('div', { class: 'editor-screen' },
-    topbar, banner, h('div', { class: 'canvas-wrap' }, host, toolbar, help), bottombar));
+    topbar, banner, h('div', { class: 'canvas-wrap' }, host, toolbar, help, readonly ? '' : stylePanel.el), bottombar));
 
   // 自動儲存：停止修改 0.6 秒後寫入
   let timer = 0, pending = false;
@@ -205,7 +209,9 @@ async function showEditor(doc: MindMapDoc, ctx: EditorContext) {
   editor = new MindMapEditor(host, doc, {
     readonly,
     openUrl,
+    onSelect: () => stylePanel.refresh(),
     onChange: () => {
+      stylePanel.refresh();
       title.textContent = doc.root.text;
       document.title = doc.root.text;
       if (readonly) return;

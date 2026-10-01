@@ -1,4 +1,5 @@
-import type { MapNode, MindMapDoc } from './types';
+import type { MapNode, MindMapDoc, NodeStyle } from './types';
+import { applyNodeStyle, MIN_H, MIN_W } from './styles';
 import { newNode } from './model';
 import { parseOutline } from './formats';
 import { lookupTerm, fetchTerm, type Choice } from './terms';
@@ -31,6 +32,8 @@ export interface EditorOptions {
   onView?: (scale: number) => void;
   /** 復原／重做的可用狀態變了 */
   onHistory?: (canUndo: boolean, canRedo: boolean) => void;
+  /** 選取的主題變了 */
+  onSelect?: (id: string) => void;
   openUrl?: (url: string) => void;
 }
 
@@ -165,6 +168,7 @@ export class MindMapEditor {
       el.className = 'mm-node' + (n === root ? ' root' : v.depth === 1 ? ' d1' : '') + (n.id === this.selected ? ' selected' : '');
       el.dataset.id = n.id;
       el.style.setProperty('--c', v.color);
+      applyNodeStyle(el, n.style);
       const t = document.createElement('span');
       t.className = 'mm-text';
       this.rich(t, n.text);
@@ -183,6 +187,7 @@ export class MindMapEditor {
           el.appendChild(this.button('mm-add ' + (v.side < 0 ? 'l' : 'r'), '新增子主題', () => { this.select(n.id); this.addChild(); }));
         }
         if (n !== root) el.appendChild(this.button('mm-del ' + (v.side < 0 ? 'l' : 'r'), '刪除', () => { this.select(n.id); this.removeSelected(); }));
+        el.appendChild(this.button('mm-resize', '拖曳調整大小', () => {}));
         if (!n.note && this.noteEditId !== n.id) {
           const memo = this.button('mm-memo', '新增備註 (N)', () => this.editNote(n.id));
           memo.textContent = '✎ 備註';
@@ -197,6 +202,8 @@ export class MindMapEditor {
         note.className = 'mm-note';
         note.dataset.id = n.id;
         note.style.setProperty('--c', v.color);
+        // 底線和接出去的分支線一樣粗：中心主題接出去 3px，其他 2px
+        note.style.setProperty('--uw', (v.depth === 0 ? 3 : 2) + 'px');
         this.rich(note, n.note || '');
         this.nodesEl.appendChild(note);
         v.noteEl = note;
@@ -207,6 +214,7 @@ export class MindMapEditor {
     build(root);
     this.relayout();
     if (!this.card.hidden) this.placeCard();
+    this.opts.onSelect?.(this.selected);
   }
 
   private button(cls: string, label: string, fn: () => void) {
@@ -275,7 +283,8 @@ export class MindMapEditor {
       v.el.style.top = v.y + 'px';
       if (v.noteEl) {
         v.noteEl.style.left = (left ? v.x : v.x + v.bw) + 'px';
-        v.noteEl.style.top = v.y + 'px';
+        // 底線的中心對齊主題的中線，和分支線接在同一條水平線上
+        v.noteEl.style.top = v.y + (v.depth === 0 ? 3 : 2) / 2 + 'px';
       }
       // 有備註時，+ 和摺疊按鈕移到底線末端
       for (const b of v.el.querySelectorAll<HTMLElement>('.mm-add, .mm-toggle')) {
@@ -331,18 +340,69 @@ export class MindMapEditor {
     this.applyView();
   }
 
-  private ensureVisible(v: NodeView) {
+  /** 讓選取的主題出現在畫面內；inset 是被面板等元素擋住的右側、下方寬度 */
+  revealSelected(insetRight = 0, insetBottom = 0) {
+    const v = this.views.get(this.selected);
+    if (v) this.ensureVisible(v, insetRight, insetBottom);
+  }
+
+  private ensureVisible(v: NodeView, insetRight = 0, insetBottom = 0) {
     const h = this.host.getBoundingClientRect(), r = v.el.getBoundingClientRect();
-    const m = 40;
+    const m = 40, right = h.right - insetRight, bottom = h.bottom - Math.max(80, insetBottom + 20);
     let dx = 0, dy = 0;
-    if (r.left < h.left + m) dx = h.left + m - r.left; else if (r.right > h.right - m) dx = h.right - m - r.right;
-    if (r.top < h.top + 70) dy = h.top + 70 - r.top; else if (r.bottom > h.bottom - 80) dy = h.bottom - 80 - r.bottom;
+    if (r.left < h.left + m) dx = h.left + m - r.left; else if (r.right > right - m) dx = right - m - r.right;
+    if (r.top < h.top + 70) dy = h.top + 70 - r.top; else if (r.bottom > bottom) dy = bottom - r.bottom;
     if (dx || dy) { this.view.x += dx; this.view.y += dy; this.applyView(); }
   }
 
   select(id: string) {
     this.selected = id;
     this.nodesEl.querySelectorAll<HTMLElement>('.mm-node').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+    this.opts.onSelect?.(id);
+  }
+
+  /* ---------- 樣式 ---------- */
+
+  getStyle(id = this.selected): NodeStyle {
+    return { ...this.views.get(id)?.n.style };
+  }
+
+  /**
+   * 修改選取主題的樣式；值為 undefined 代表恢復預設。
+   * preview 為 true 時只更新畫面、不記入復原（例如拖動顏色選擇器的過程）。
+   */
+  setStyle(patch: Partial<NodeStyle>, preview = false) {
+    const v = this.views.get(this.selected);
+    if (this.readonly || !v) return;
+    const next: NodeStyle = { ...v.n.style, ...patch };
+    for (const k of Object.keys(next) as (keyof NodeStyle)[]) if (next[k] === undefined) delete next[k];
+    if (preview) { applyNodeStyle(v.el, next); this.relayout(); return; }
+    this.commit(() => { if (Object.keys(next).length) v.n.style = next; else delete v.n.style; });
+  }
+
+  private startResize(e: PointerEvent, id: string) {
+    const v = this.views.get(id);
+    if (!v) return;
+    e.stopPropagation();
+    const sx = e.clientX, sy = e.clientY, w0 = v.bw, h0 = v.h;
+    let w = w0, h = h0;
+    const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== e.pointerId) return;
+      w = Math.max(MIN_W, Math.round(w0 + (ev.clientX - sx) / this.view.s));
+      h = Math.max(MIN_H, Math.round(h0 + (ev.clientY - sy) / this.view.s));
+      applyNodeStyle(v.el, { ...v.n.style, w, h });
+      this.relayout();
+    };
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== e.pointerId) return;
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', up);
+      removeEventListener('pointercancel', up);
+      if (w !== w0 || h !== h0) this.setStyle({ w, h }); else this.render();
+    };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+    addEventListener('pointercancel', up);
   }
 
   /* ---------- 編輯操作 ---------- */
@@ -505,6 +565,8 @@ export class MindMapEditor {
         return;
       }
       this.hideCard();
+      const handle = target.closest<HTMLElement>('.mm-resize');
+      if (handle) { this.startResize(e, handle.closest<HTMLElement>('.mm-node')!.dataset.id!); return; }
       if (target.closest('.mm-toggle,.mm-add,.mm-del,.mm-memo')) return;
       const note = target.closest<HTMLElement>('.mm-note');
       if (note) {

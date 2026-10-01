@@ -1,6 +1,6 @@
 {
   "name": "mindmap",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "跨平台思維導圖 App（Mac、Windows、Linux、iOS、Android）",
   "type": "module",
